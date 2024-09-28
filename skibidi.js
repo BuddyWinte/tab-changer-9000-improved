@@ -20,7 +20,7 @@ function createPopup() {
     titleBar.style.backgroundColor = '#333';
     titleBar.style.color = 'white';
     titleBar.style.padding = '10px';
-    titleBar.style.cursor = 'default';
+    titleBar.style.cursor = 'move';
     titleBar.style.zIndex = '9999';
 
     const title = document.createElement('span');
@@ -75,6 +75,23 @@ function createPopup() {
     popup.appendChild(container);
     document.body.appendChild(popup);
     popup.style.display = 'block';
+
+    let offsetX, offsetY;
+
+    titleBar.onmousedown = function (e) {
+        offsetX = e.clientX - popup.getBoundingClientRect().left;
+        offsetY = e.clientY - popup.getBoundingClientRect().top;
+        document.onmousemove = function (e) {
+            popup.style.left = e.clientX - offsetX + 'px';
+            popup.style.top = e.clientY - offsetY + 'px';
+            popup.style.transform = 'none';
+        };
+        document.onmouseup = function () {
+            document.onmousemove = null;
+            document.onmouseup = null;
+            popup.style.transform = 'translate(-50%, -50%) scale(1)';
+        };
+    };
 }
 
 createPopup();
