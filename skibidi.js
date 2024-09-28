@@ -125,7 +125,7 @@ function createPopup() {
             setTimeout(() => {
                 button.style.transform = 'scale(1)';
                 button.innerText = originalText;
-            }, 650);
+            }, 300);
         };
         container.appendChild(button);
     });
