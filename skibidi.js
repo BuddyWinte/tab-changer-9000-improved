@@ -7,11 +7,9 @@ function createPopup() {
     popup.style.overflow = 'hidden';
     popup.style.position = 'fixed';
 
-    // Check for stored position in localStorage
     const storedX = localStorage.getItem('popupX');
     const storedY = localStorage.getItem('popupY');
 
-    // Set initial position
     if (storedX && storedY) {
         popup.style.left = storedX + 'px';
         popup.style.top = storedY + 'px';
@@ -84,17 +82,15 @@ function createPopup() {
     let offsetX, offsetY, isDragging = false;
 
     titleBar.onmousedown = function (e) {
-        // Calculate the offset at the start of dragging
         offsetX = e.clientX - popup.getBoundingClientRect().left;
         offsetY = e.clientY - popup.getBoundingClientRect().top;
         isDragging = true;
 
         document.onmousemove = function (e) {
             if (isDragging) {
-                // Update the position of the popup during dragging
                 popup.style.left = e.clientX - offsetX + 'px';
                 popup.style.top = e.clientY - offsetY + 'px';
-                popup.style.transform = 'none'; // Disable center transform during dragging
+                popup.style.transform = 'none';
             }
         };
 
@@ -104,13 +100,12 @@ function createPopup() {
                 document.onmousemove = null;
                 document.onmouseup = null;
 
-                // Save the position to localStorage
                 localStorage.setItem('popupX', popup.getBoundingClientRect().left);
                 localStorage.setItem('popupY', popup.getBoundingClientRect().top);
             }
         };
 
-        e.preventDefault(); // Prevent text selection during dragging
+        e.preventDefault();
     };
 }
 
