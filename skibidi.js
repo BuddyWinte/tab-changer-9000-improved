@@ -13,14 +13,14 @@ function createPopup() {
     popup.style.position = 'fixed';
     popup.style.fontFamily = '"Poppins", sans-serif';
     popup.style.color = '#E0E0E0';
-    popup.style.transition = 'transform 0.3s';
-    popup.style.transform = 'scale(0)';
+    popup.style.transition = 'transform 0.3s, top 0.3s, left 0.3s';
     popup.style.zIndex = '9999';
+    popup.style.resize = 'both';
+    popup.style.overflow = 'auto';
     document.body.appendChild(popup);
 
     const storedX = localStorage.getItem('popupX');
     const storedY = localStorage.getItem('popupY');
-
     if (storedX && storedY) {
         popup.style.left = storedX + 'px';
         popup.style.top = storedY + 'px';
@@ -52,10 +52,15 @@ function createPopup() {
     closeButton.style.borderRadius = '50%';
     closeButton.style.width = '30px';
     closeButton.style.height = '30px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontSize = '18px';
     closeButton.onclick = function () {
         popup.style.transform = 'scale(0)';
         setTimeout(() => popup.remove(), 300);
     };
+
+    closeButton.onfocus = function () { closeButton.style.outline = '2px solid #E0E0E0'; };
+    closeButton.onblur = function () { closeButton.style.outline = 'none'; };
 
     titleBar.appendChild(closeButton);
     popup.appendChild(titleBar);
@@ -101,7 +106,7 @@ function createPopup() {
         button.style.borderRadius = '5px';
         button.style.cursor = 'pointer';
         button.style.fontWeight = '600';
-        button.style.transition = 'transform 0.1s';
+        button.style.transition = 'transform 0.1s, background-color 0.2s';
         button.onmouseover = function () {
             button.style.backgroundColor = '#333';
         };
@@ -129,6 +134,13 @@ function createPopup() {
         };
         container.appendChild(button);
     });
+
+    container.style.scrollbarWidth = 'thin';
+    container.style.scrollbarColor = '#333 #121212';
+    const style = document.createElement('style');
+    style.innerHTML = `::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background-color: #333; border-radius: 10px; }`;
+    document.head.appendChild(style);
 
     popup.appendChild(container);
     document.body.appendChild(popup);
@@ -164,6 +176,7 @@ function createPopup() {
 
         e.preventDefault();
     };
+    popup.querySelector('button').focus();
 }
 
 createPopup();
