@@ -10,6 +10,7 @@ function createPopup() {
     popup.style.left = '50%';
     popup.style.transform = 'translate(-50%, -50%) scale(1)';
     popup.style.transition = 'transform 0.3s ease';
+    popup.style.zIndex = '9999';
     document.body.appendChild(popup);
 
     const titleBar = document.createElement('div');
@@ -20,7 +21,8 @@ function createPopup() {
     titleBar.style.color = 'white';
     titleBar.style.padding = '10px';
     titleBar.style.cursor = 'default';
-    
+    titleBar.style.zIndex = '9999';
+
     const title = document.createElement('span');
     title.innerText = 'Change Page Title';
     titleBar.appendChild(title);
@@ -33,6 +35,7 @@ function createPopup() {
     closeButton.style.borderRadius = '50%';
     closeButton.style.width = '30px';
     closeButton.style.height = '30px';
+    closeButton.style.zIndex = '9999';
     closeButton.onclick = function () {
         popup.style.transform = 'translate(-50%, -50%) scale(0)';
         setTimeout(() => {
@@ -46,7 +49,8 @@ function createPopup() {
     container.style.height = '200px';
     container.style.overflowY = 'auto';
     container.style.padding = '10px';
-    
+    container.style.zIndex = '9999';
+
     const buttonData = [
         { label: 'Set Title to "Example 1"', title: 'Example 1', favicon: 'https://example.com/favicon1.ico' },
         { label: 'Set Title to "Example 2"', title: 'Example 2', favicon: 'https://example.com/favicon2.ico' },
@@ -57,6 +61,7 @@ function createPopup() {
         button.innerText = data.label;
         button.style.width = '100%';
         button.style.marginBottom = '5px';
+        button.style.zIndex = '9999';
         button.onclick = function () {
             document.title = data.title;
             const link = document.createElement('link');
