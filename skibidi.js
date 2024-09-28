@@ -1,11 +1,18 @@
 function createPopup() {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
     const popup = document.createElement('div');
     popup.style.width = '400px';
-    popup.style.backgroundColor = '#1e1e1e';
+    popup.style.backgroundColor = '#121212';
     popup.style.borderRadius = '10px';
-    popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.5)';
+    popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.9)';
     popup.style.overflow = 'hidden';
     popup.style.position = 'fixed';
+    popup.style.fontFamily = '"Poppins", sans-serif';
+    popup.style.color = '#E0E0E0';
 
     const storedX = localStorage.getItem('popupX');
     const storedY = localStorage.getItem('popupY');
@@ -26,13 +33,14 @@ function createPopup() {
     titleBar.style.display = 'flex';
     titleBar.style.justifyContent = 'space-between';
     titleBar.style.alignItems = 'center';
-    titleBar.style.backgroundColor = '#333';
-    titleBar.style.color = 'white';
+    titleBar.style.backgroundColor = '#1E1E1E';
+    titleBar.style.color = '#E0E0E0';
     titleBar.style.padding = '10px';
     titleBar.style.cursor = 'move';
 
     const title = document.createElement('span');
     title.innerText = 'Change Page Title';
+    title.style.fontWeight = '600';
     titleBar.appendChild(title);
 
     const closeButton = document.createElement('button');
@@ -85,6 +93,19 @@ function createPopup() {
         button.innerText = data.label;
         button.style.width = '100%';
         button.style.marginBottom = '5px';
+        button.style.padding = '10px';
+        button.style.backgroundColor = '#1E1E1E';
+        button.style.color = '#E0E0E0';
+        button.style.border = 'none';
+        button.style.borderRadius = '5px';
+        button.style.cursor = 'pointer';
+        button.style.fontWeight = '600';
+        button.onmouseover = function () {
+            button.style.backgroundColor = '#333';
+        };
+        button.onmouseout = function () {
+            button.style.backgroundColor = '#1E1E1E';
+        };
         button.onclick = function () {
             document.title = data.title;
             const existingLink = document.querySelector("link[rel='icon']");
