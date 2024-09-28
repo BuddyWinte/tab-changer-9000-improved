@@ -119,7 +119,7 @@ function createPopup() {
                 link.href = data.favicon;
                 document.head.appendChild(link);
             }
-            button.style.transform = 'scale(0.95)';
+            button.style.transform = 'scale(0.98)';
             const originalText = button.innerText;
             button.innerText = 'Success';
             setTimeout(() => {
