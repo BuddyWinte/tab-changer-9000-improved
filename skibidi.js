@@ -39,7 +39,7 @@ function createPopup() {
     titleBar.style.cursor = 'move';
 
     const title = document.createElement('span');
-    title.innerText = 'Change Page Title';
+    title.innerText = 'Change Tab & Title';
     title.style.fontWeight = '600';
     titleBar.appendChild(title);
 
