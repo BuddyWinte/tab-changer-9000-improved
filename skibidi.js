@@ -6,10 +6,21 @@ function createPopup() {
     popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.5)';
     popup.style.overflow = 'hidden';
     popup.style.position = 'fixed';
-    popup.style.top = '50%';
-    popup.style.left = '50%';
-    popup.style.transform = 'translate(-50%, -50%) scale(1)';
-    popup.style.transition = 'transform 0.3s ease';
+
+    // Check for stored position in localStorage
+    const storedX = localStorage.getItem('popupX');
+    const storedY = localStorage.getItem('popupY');
+
+    // Set initial position
+    if (storedX && storedY) {
+        popup.style.left = storedX + 'px';
+        popup.style.top = storedY + 'px';
+    } else {
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+    }
+
     popup.style.zIndex = '9999';
     document.body.appendChild(popup);
 
@@ -21,7 +32,6 @@ function createPopup() {
     titleBar.style.color = 'white';
     titleBar.style.padding = '10px';
     titleBar.style.cursor = 'move';
-    titleBar.style.zIndex = '9999';
 
     const title = document.createElement('span');
     title.innerText = 'Change Page Title';
@@ -35,13 +45,10 @@ function createPopup() {
     closeButton.style.borderRadius = '50%';
     closeButton.style.width = '30px';
     closeButton.style.height = '30px';
-    closeButton.style.zIndex = '9999';
     closeButton.onclick = function () {
-        popup.style.transform = 'translate(-50%, -50%) scale(0)';
-        setTimeout(() => {
-            popup.style.display = 'none';
-        }, 300);
+        popup.style.display = 'none';
     };
+
     titleBar.appendChild(closeButton);
     popup.appendChild(titleBar);
 
@@ -49,7 +56,6 @@ function createPopup() {
     container.style.height = '200px';
     container.style.overflowY = 'auto';
     container.style.padding = '10px';
-    container.style.zIndex = '9999';
 
     const buttonData = [
         { label: 'Set Title to "Example 1"', title: 'Example 1', favicon: 'https://example.com/favicon1.ico' },
@@ -61,7 +67,6 @@ function createPopup() {
         button.innerText = data.label;
         button.style.width = '100%';
         button.style.marginBottom = '5px';
-        button.style.zIndex = '9999';
         button.onclick = function () {
             document.title = data.title;
             const link = document.createElement('link');
@@ -76,21 +81,36 @@ function createPopup() {
     document.body.appendChild(popup);
     popup.style.display = 'block';
 
-    let offsetX, offsetY;
+    let offsetX, offsetY, isDragging = false;
 
     titleBar.onmousedown = function (e) {
+        // Calculate the offset at the start of dragging
         offsetX = e.clientX - popup.getBoundingClientRect().left;
         offsetY = e.clientY - popup.getBoundingClientRect().top;
+        isDragging = true;
+
         document.onmousemove = function (e) {
-            popup.style.left = e.clientX - offsetX + 'px';
-            popup.style.top = e.clientY - offsetY + 'px';
-            popup.style.transform = 'none';
+            if (isDragging) {
+                // Update the position of the popup during dragging
+                popup.style.left = e.clientX - offsetX + 'px';
+                popup.style.top = e.clientY - offsetY + 'px';
+                popup.style.transform = 'none'; // Disable center transform during dragging
+            }
         };
+
         document.onmouseup = function () {
-            document.onmousemove = null;
-            document.onmouseup = null;
-            popup.style.transform = 'translate(-50%, -50%) scale(1)';
+            if (isDragging) {
+                isDragging = false;
+                document.onmousemove = null;
+                document.onmouseup = null;
+
+                // Save the position to localStorage
+                localStorage.setItem('popupX', popup.getBoundingClientRect().left);
+                localStorage.setItem('popupY', popup.getBoundingClientRect().top);
+            }
         };
+
+        e.preventDefault(); // Prevent text selection during dragging
     };
 }
 
