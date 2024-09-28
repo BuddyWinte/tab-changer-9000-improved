@@ -13,6 +13,10 @@ function createPopup() {
     popup.style.position = 'fixed';
     popup.style.fontFamily = '"Poppins", sans-serif';
     popup.style.color = '#E0E0E0';
+    popup.style.transition = 'transform 0.3s';
+    popup.style.transform = 'scale(0)';
+    popup.style.zIndex = '9999';
+    document.body.appendChild(popup);
 
     const storedX = localStorage.getItem('popupX');
     const storedY = localStorage.getItem('popupY');
@@ -23,11 +27,8 @@ function createPopup() {
     } else {
         popup.style.top = '50%';
         popup.style.left = '50%';
-        popup.style.transform = 'translate(-50%, -50%)';
+        popup.style.transform = 'translate(-50%, -50%) scale(1)';
     }
-
-    popup.style.zIndex = '9999';
-    document.body.appendChild(popup);
 
     const titleBar = document.createElement('div');
     titleBar.style.display = 'flex';
@@ -52,7 +53,8 @@ function createPopup() {
     closeButton.style.width = '30px';
     closeButton.style.height = '30px';
     closeButton.onclick = function () {
-        popup.style.display = 'none';
+        popup.style.transform = 'scale(0)';
+        setTimeout(() => popup.remove(), 300);
     };
 
     titleBar.appendChild(closeButton);
@@ -99,6 +101,7 @@ function createPopup() {
         button.style.borderRadius = '5px';
         button.style.cursor = 'pointer';
         button.style.fontWeight = '600';
+        button.style.transition = 'transform 0.1s';
         button.onmouseover = function () {
             button.style.backgroundColor = '#333';
         };
@@ -116,13 +119,22 @@ function createPopup() {
                 link.href = data.favicon;
                 document.head.appendChild(link);
             }
+            button.style.transform = 'scale(0.95)';
+            const originalText = button.innerText;
+            button.innerText = 'Success';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+                button.innerText = originalText;
+            }, 650);
         };
         container.appendChild(button);
     });
 
     popup.appendChild(container);
     document.body.appendChild(popup);
-    popup.style.display = 'block';
+    setTimeout(() => {
+        popup.style.transform = 'scale(1)';
+    }, 0);
 
     let offsetX, offsetY, isDragging = false;
 
