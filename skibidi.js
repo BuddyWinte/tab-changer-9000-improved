@@ -12,24 +12,18 @@ function createPopup() {
         position: 'fixed',
         fontFamily: '"Poppins", sans-serif',
         color: '#ffffff',
-        transition: 'transform 0.3s ease, top 0.3s ease, left 0.3s ease',
+        transition: 'transform 0.3s ease',
         zIndex: '10000',
         resize: 'both',
         overflow: 'hidden',
         maxWidth: '90%',
         maxHeight: '90%',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%) scale(1)',
     });
     document.body.appendChild(popup);
-    const storedX = localStorage.getItem('popupX');
-    const storedY = localStorage.getItem('popupY');
-    if (storedX && storedY) {
-        popup.style.left = `${storedX}px`;
-        popup.style.top = `${storedY}px`;
-    } else {
-        popup.style.top = '50%';
-        popup.style.left = '50%';
-        popup.style.transform = 'translate(-50%, -50%) scale(1)';
-    }
+
     const titleBar = document.createElement('div');
     Object.assign(titleBar.style, {
         display: 'flex',
@@ -37,7 +31,7 @@ function createPopup() {
         alignItems: 'center',
         backgroundColor: '#2c2c2c',
         padding: '12px 16px',
-        cursor: 'move',
+        cursor: 'default',
         userSelect: 'none',
     });
 
@@ -73,62 +67,68 @@ function createPopup() {
     };
 
     closeButton.onclick = () => {
-        popup.style.transform = 'scale(0)';
+        popup.style.transform = 'translate(-50%, -50%) scale(0)';
         setTimeout(() => popup.remove(), 300);
     };
     titleBar.appendChild(closeButton);
     popup.appendChild(titleBar);
+
     const container = document.createElement('div');
     Object.assign(container.style, {
         padding: '16px',
-        height: 'calc(100% - 56px)',
         overflowY: 'auto',
         background: 'linear-gradient(135deg, #1e1e1e, #2c2c2c)',
+        height: 'calc(100% - 56px)',
     });
+
     const buttonData = [
-        { label: 'Google Drive', title: 'Google Drive', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/drive.png' },
-        { label: 'Gmail', title: 'Gmail', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/gmail.png' },
-        { label: 'Duolingo', title: 'Duolingo', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/duo.png' },
-        { label: 'Zoom', title: 'Zoom', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/zoom.png' },
-        { label: 'Slack', title: 'Slack', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/slack.png' },
-        { label: 'Microsoft Teams', title: 'Microsoft Teams', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/teams.png' },
-        { label: 'Notion', title: 'Notion', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/notion.png' },
-        { label: 'Evernote', title: 'Evernote', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/evernote.png' },
-        { label: 'Khan Academy', title: 'Khan Academy', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/khan.png' },
-        { label: 'Google Classroom', title: 'Google Classroom', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/googleclassroom.png' },
-        { label: 'Canvas', title: 'Canvas', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/canvas.png' },
-        { label: 'Moodle', title: 'Moodle', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/moodle.png' },
-        { label: 'Quizlet', title: 'Quizlet', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/quizlet.png' },
-        { label: 'Trello', title: 'Trello', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/trello.png' },
-        { label: 'Flipgrid', title: 'Flipgrid', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/flipgrid.png' },
-        { label: 'Spotify', title: 'Spotify', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/spotify.png' },
-        { label: 'Desmos', title: 'Desmos', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/desmos.png' },
-        { label: 'Outlook', title: 'Outlook', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/outlook.png' },
-        { label: 'Onenote', title: 'Onenote', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/onenote.png' },
-        { label: 'SimpleMind', title: 'SimpleMind', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/simplemind.png' },
-        { label: 'Wolfram', title: 'Wolfram', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/refs/heads/main/icons/wolfram.png' }
+        { label: 'Google Drive', title: 'Google Drive', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/drive.png' },
+        { label: 'Gmail', title: 'Gmail', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/gmail.png' },
+        { label: 'Duolingo', title: 'Duolingo', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/duo.png' },
+        { label: 'Zoom', title: 'Zoom', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/zoom.png' },
+        { label: 'Slack', title: 'Slack', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/slack.png' },
+        { label: 'Microsoft Teams', title: 'Microsoft Teams', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/teams.png' },
+        { label: 'Notion', title: 'Notion', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/notion.png' },
+        { label: 'Evernote', title: 'Evernote', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/evernote.png' },
+        { label: 'Khan Academy', title: 'Khan Academy', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/khan.png' },
+        { label: 'Google Classroom', title: 'Google Classroom', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/googleclassroom.png' },
+        { label: 'Canvas', title: 'Canvas', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/canvas.png' },
+        { label: 'Moodle', title: 'Moodle', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/moodle.png' },
+        { label: 'Quizlet', title: 'Quizlet', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/quizlet.png' },
+        { label: 'Trello', title: 'Trello', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/trello.png' },
+        { label: 'Flipgrid', title: 'Flipgrid', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/flipgrid.png' },
+        { label: 'Spotify', title: 'Spotify', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/spotify.png' },
+        { label: 'Desmos', title: 'Desmos', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/desmos.png' },
+        { label: 'Outlook', title: 'Outlook', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/outlook.png' },
+        { label: 'Onenote', title: 'Onenote', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/onenote.png' },
+        { label: 'SimpleMind', title: 'SimpleMind', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/simplemind.png' },
+        { label: 'Wolfram', title: 'Wolfram', favicon: 'https://raw.githubusercontent.com/smoressy/tab-changer-9000/main/icons/wolfram.png' }
     ];
     buttonData.forEach(data => {
         const button = document.createElement('button');
-        button.style.width = '100%';
-        button.style.marginBottom = '10px';
-        button.style.padding = '10px 14px';
-        button.style.backgroundColor = '#2c2c2c';
-        button.style.color = '#ffffff';
-        button.style.border = 'none';
-        button.style.borderRadius = '8px';
-        button.style.cursor = 'pointer';
-        button.style.fontWeight = '500';
-        button.style.display = 'flex';
-        button.style.alignItems = 'center';
-        button.style.transition = 'background-color 0.3s ease, transform 0.1s ease';
-        button.style.fontSize = '14px';
+        Object.assign(button.style, {
+            width: '100%',
+            marginBottom: '10px',
+            padding: '10px 14px',
+            backgroundColor: '#2c2c2c',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            transition: 'background-color 0.3s ease, transform 0.1s ease',
+            fontSize: '14px',
+        });
+
         button.onmouseover = () => {
             button.style.backgroundColor = '#3a3a3a';
         };
         button.onmouseout = () => {
             button.style.backgroundColor = '#2c2c2c';
         };
+
         const icon = document.createElement('img');
         icon.src = data.favicon;
         icon.alt = `${data.label} icon`;
@@ -139,7 +139,10 @@ function createPopup() {
         });
 
         button.appendChild(icon);
-        button.appendChild(document.createTextNode(data.label));
+        const buttonText = document.createElement('span');
+        buttonText.textContent = data.label;
+        button.appendChild(buttonText);
+
         button.onclick = () => {
             document.title = data.title;
             let existingLink = document.querySelector("link[rel='icon']");
@@ -152,11 +155,11 @@ function createPopup() {
                 document.head.appendChild(link);
             }
             button.style.transform = 'scale(0.98)';
-            const originalText = button.innerText;
-            button.innerText = 'Success';
+            const originalText = buttonText.textContent;
+            buttonText.textContent = 'Success';
             setTimeout(() => {
                 button.style.transform = 'scale(1)';
-                button.innerText = originalText;
+                buttonText.textContent = originalText;
                 button.insertBefore(icon, button.firstChild);
             }, 300);
         };
@@ -166,15 +169,13 @@ function createPopup() {
     const style = document.createElement('style');
     style.innerHTML = `
         /* Scrollbar Styles */
-        ${container.style.scrollbarWidth = 'thin'}
-        ${container.style.scrollbarColor = '#555 #1e1e1e'}
-        ::-webkit-scrollbar {
+        div::-webkit-scrollbar {
             width: 8px;
         }
-        ::-webkit-scrollbar-track {
+        div::-webkit-scrollbar-track {
             background: #1e1e1e;
         }
-        ::-webkit-scrollbar-thumb {
+        div::-webkit-scrollbar-thumb {
             background-color: #555;
             border-radius: 4px;
             border: 2px solid #1e1e1e;
@@ -183,52 +184,9 @@ function createPopup() {
     document.head.appendChild(style);
 
     popup.appendChild(container);
-    document.body.appendChild(popup);
     setTimeout(() => {
         popup.style.transform = 'translate(-50%, -50%) scale(1)';
     }, 0);
-    let offsetX, offsetY, isDragging = false;
-
-    titleBar.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        const rect = popup.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        popup.style.transition = 'none';
-        document.body.style.userSelect = 'none';
-
-        const onMouseMove = (e) => {
-            if (isDragging) {
-                let newX = e.clientX - offsetX;
-                let newY = e.clientY - offsetY;
-                const maxX = window.innerWidth - popup.offsetWidth;
-                const maxY = window.innerHeight - popup.offsetHeight;
-                newX = Math.max(0, Math.min(newX, maxX));
-                newY = Math.max(0, Math.min(newY, maxY));
-
-                popup.style.left = `${newX}px`;
-                popup.style.top = `${newY}px`;
-            }
-        };
-
-        const onMouseUp = () => {
-            if (isDragging) {
-                isDragging = false;
-                popup.style.transition = 'transform 0.3s ease, top 0.3s ease, left 0.3s ease';
-                document.body.style.userSelect = 'auto';
-                const rect = popup.getBoundingClientRect();
-                localStorage.setItem('popupX', rect.left);
-                localStorage.setItem('popupY', rect.top);
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-        };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-
-        e.preventDefault();
-    });
     closeButton.focus();
 }
 
