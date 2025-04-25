@@ -1,1 +1,184 @@
-(function () { async function fetchAnswer(prompt, isMultipleChoice, userId = null) { const prePromptMultipleChoice = ` Ignore all previous instructions. Answer with the **exact correct choice** from the provided options (e.g., "A", "B", "C", "D" or the full option text). Wrap your answer in <ans> tags, like this: <ans>Correct Choice</ans>. `; const prePromptOpenEnded = `Answer the question directly and concisely.`; const finalPrompt = isMultipleChoice ? `${prePromptMultipleChoice}\n\n${prompt}` : `${prePromptOpenEnded}\n\n${prompt}`; try { const response = await fetch("https://public.smoresxo.shop/generate", { method: "POST", headers: { "Content-Type": "application/json", }, body: JSON.stringify({ prompt: finalPrompt, userid: userId, }), }); if (!response.ok) { throw new Error(`Server error: ${response.status}`); } const data = await response.json(); return data.message; } catch (error) { console.error("Error fetching answer:", error); return null; } } function extractAnswer(aiMessage) { const match = aiMessage.match(/<ans>(.*?)<\/ans>/); return match ? match[1].trim() : null; } function mapAnswerToChoice(answer, choices) { const letterMapping = ["A", "B", "C", "D"]; const index = letterMapping.indexOf(answer.toUpperCase()); return index !== -1 && choices[index] ? choices[index] : null; } function selectAnswer(answer) { const choiceElements = document.querySelectorAll('span.hHhDYc.snByac'); for (const element of choiceElements) { if (element.textContent.trim() === answer) { element.click(); console.log(`Clicked answer: ${answer}`); return; } } console.warn(`Answer "${answer}" not found among the choices.`); } function fillOpenEndedAnswer(answer) { const textarea = document.querySelector('textarea[aria-label="Type your answer"]'); if (textarea) { textarea.value = answer; const event = new Event('input', { bubbles: true, cancelable: true }); textarea.dispatchEvent(event); console.log('Open-ended answer filled:', answer); } else { console.error('Textarea for open-ended answer not found.'); } } const supportedSites = { "classroom.google.com": { name: "Google Classroom", action: async () => { function extractQuestionDetails() { const questionTitleElement = document.querySelector('div.N5dSp h1.fOvfyc span[style="white-space: pre-wrap;"]'); const choiceElements = document.querySelectorAll('span.hHhDYc.snByac'); const instructionElement = document.querySelector('div.nGi02b.tLDEHd.j70YMc span'); const questionTitle = questionTitleElement ? questionTitleElement.textContent.trim() : null; const choices = Array.from(choiceElements).map(choice => choice.textContent.trim()); const instructionText = instructionElement ? instructionElement.textContent.trim() : null; return { questionTitle, choices, instructionText, isMultipleChoice: choices.length > 0 }; } const questionDetails = extractQuestionDetails(); const { questionTitle, choices, instructionText, isMultipleChoice } = questionDetails; if (!questionTitle) { console.error("Failed to extract question title from the DOM."); return; } console.log("Question:", questionTitle); if (instructionText) { console.log("Instruction:", instructionText); } const userId = "123456789012"; let formattedPrompt = `Question: ${questionTitle}`; if (instructionText) { formattedPrompt += `\nInstruction: ${instructionText}`; } if (isMultipleChoice) { console.log("Choices:", choices); formattedPrompt += `\nOptions:\n${choices .map((choice, index) => `${String.fromCharCode(65 + index)}) ${choice}`) .join("\n")}`; } else { console.log("Open-ended question detected."); } const aiResponse = await fetchAnswer(formattedPrompt, isMultipleChoice, userId); if (aiResponse) { console.log("AI Response:", aiResponse); if (isMultipleChoice) { const extractedAnswer = extractAnswer(aiResponse); if (extractedAnswer) { console.log("Extracted Answer:", extractedAnswer); const mappedAnswer = mapAnswerToChoice(extractedAnswer, choices); selectAnswer(mappedAnswer || extractedAnswer); } else { console.error("Failed to extract an answer from the AI response for multiple choice question."); } } else { fillOpenEndedAnswer(aiResponse); } } } }, "docs.google.com": { name: "Google Docs", action: () => { alert("Google Docs script executed."); } }, "docs.google.com/forms": { name: "Google Forms", action: () => { const API_URL = 'public.smoresxo.shop/generate'; async function getAiAnswer(prompt, userid) { try { const response = await fetch(`https://${API_URL}`, { method: 'POST', headers: { 'Content-Type': 'application/json', }, body: JSON.stringify({ prompt, userid }), }); if (!response.ok) { const message = await response.json(); throw new Error(message.message || `HTTP error! status: ${response.status}`); } const data = await response.json(); return data.message; } catch (error) { console.error('Error fetching AI answer:', error); return null; } } function extractGoogleFormDetails() { const formDetails = {}; formDetails.questions = []; const titleElement = document.querySelector('[role="heading"][aria-level="1"]'); if (titleElement) { formDetails.title = titleElement.textContent.trim(); } let descriptionElement = titleElement?.nextElementSibling; if (descriptionElement && descriptionElement.textContent.trim() && !descriptionElement.querySelector('[role="heading"]')) { formDetails.description = descriptionElement.textContent.trim(); } else { const parentContainer = titleElement?.closest('.N0gd6'); if (parentContainer) { const potentialDescription = Array.from(parentContainer.children).find( (el) => el !== titleElement && el.textContent.trim() && !el.querySelector('[role="heading"]') ); if (potentialDescription) { formDetails.description = potentialDescription.textContent.trim(); } } } const questionContainers = document.querySelectorAll('.Qr7Oae[role="listitem"]'); questionContainers.forEach(questionContainer => { const questionInfo = {}; const questionTitleElement = questionContainer.querySelector('[role="heading"][aria-level="3"] span.M7eMe'); if (questionTitleElement) { questionInfo.title = questionTitleElement.textContent.trim(); } if (questionContainer.querySelector('[role="radiogroup"]')) { questionInfo.type = "MULTIPLE CHOICE"; questionInfo.options = Array.from(questionContainer.querySelectorAll('[role="radio"]')) .map(radioElement => radioElement.getAttribute('aria-label')); } else if (questionContainer.querySelector('input[type="text"]')) { questionInfo.type = "SHORT OPEN ENDED QUESTION"; questionInfo.inputElement = questionContainer.querySelector('input[type="text"]'); } else if (questionContainer.querySelector('textarea')) { questionInfo.type = "LONG FORM OPEN ENDED QUESTION"; questionInfo.textAreaElement = questionContainer.querySelector('textarea'); } else if (questionContainer.querySelectorAll('[role="checkbox"]').length > 0) { questionInfo.type = "CHECK GRID QUESTION"; questionInfo.options = Array.from(questionContainer.querySelectorAll('[role="checkbox"]')) .map(checkboxElement => checkboxElement.getAttribute('aria-label')); } if (Object.keys(questionInfo).length > 0) { formDetails.questions.push(questionInfo); } }); return formDetails; } async function answerMultipleChoice(question, userid) { const options = question.options; const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, options.length).split(''); const formattedOptions = options.map((option, index) => `${letters[index]}: ${option}`).join('\n'); const prompt = `For the following multiple choice question:\n${question.title}\nAnswer Choices:\n${formattedOptions}\nWrap your answer in <ans> tags with the letter of your choice.`; const aiAnswer = await getAiAnswer(prompt, userid); if (aiAnswer) { const match = aiAnswer.match(/<ans>([A-Z])<\/ans>/); if (match && letters.includes(match[1])) { const selectedLetter = match[1]; const optionIndex = letters.indexOf(selectedLetter); const radioButtons = Array.from(document.querySelectorAll('[role="radio"]')); const targetRadioButton = radioButtons.find(radio => radio.getAttribute('aria-label') === question.options[optionIndex]); if (targetRadioButton) { targetRadioButton.click(); } } } } async function answerOpenEnded(question, userid) { const prompt = question.title; const aiAnswer = await getAiAnswer(prompt, userid); if (aiAnswer) { if (question.type === "SHORT OPEN ENDED QUESTION" && question.inputElement) { question.inputElement.value = aiAnswer; question.inputElement.dispatchEvent(new Event('input', { bubbles: true })); } else if (question.type === "LONG FORM OPEN ENDED QUESTION" && question.textAreaElement) { question.textAreaElement.value = aiAnswer; question.textAreaElement.dispatchEvent(new Event('input', { bubbles: true })); } } } async function answerCheckGrid(question, userid) { const options = question.options; const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, options.length).split(''); const formattedOptions = options.map((option, index) => `${letters[index]}: ${option}`).join('\n'); const prompt = `For the following check grid question where you can select multiple answers:\n${question.title}\nAnswer Choices:\n${formattedOptions}\nWrap each of your selected answer letters in separate <ans> tags. You can select multiple answers.`; const aiAnswer = await getAiAnswer(prompt, userid); if (aiAnswer) { const matches = aiAnswer.matchAll(/<ans>([A-Z])<\/ans>/g); const selectedLetters = Array.from(matches).map(match => match[1]); if (selectedLetters.length > 0) { const checkboxes = Array.from(document.querySelectorAll('[role="checkbox"]')); selectedLetters.forEach(letter => { if (letters.includes(letter)) { const optionIndex = letters.indexOf(letter); const targetCheckbox = checkboxes.find(checkbox => checkbox.getAttribute('aria-label') === question.options[optionIndex]); if (targetCheckbox && targetCheckbox.getAttribute('aria-checked') === 'false') { targetCheckbox.click(); } } }); } } } function createToastElement() { const toastDiv = document.createElement('div'); toastDiv.style.position = 'fixed'; toastDiv.style.top = '-100px'; toastDiv.style.left = '50%'; toastDiv.style.transform = 'translateX(-50%)'; toastDiv.style.backgroundColor = 'rgba(33, 33, 33, 0.95)'; toastDiv.style.color = 'white'; toastDiv.style.padding = '16px 24px'; toastDiv.style.borderRadius = '12px'; toastDiv.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'; toastDiv.style.display = 'flex'; toastDiv.style.alignItems = 'center'; toastDiv.style.gap = '12px'; toastDiv.style.zIndex = '10000'; toastDiv.style.transition = 'top 0.3s ease-in-out'; toastDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'; toastDiv.style.backdropFilter = 'blur(10px)'; const spinnerDiv = document.createElement('div'); spinnerDiv.style.width = '20px'; spinnerDiv.style.height = '20px'; spinnerDiv.style.border = '0px solid #00000000'; spinnerDiv.style.borderTop = '2px solid #a10db8'; spinnerDiv.style.borderRadius = '50%'; spinnerDiv.style.animation = 'spinner 1s linear infinite'; const messageSpan = document.createElement('span'); messageSpan.textContent = 'Initializing...'; toastDiv.appendChild(spinnerDiv); toastDiv.appendChild(messageSpan); const keyframes = document.createElement('style'); keyframes.textContent = '@keyframes spinner { to { transform: rotate(360deg); } }'; document.head.appendChild(keyframes); return { toastDiv, spinnerDiv, messageSpan }; } function updateToastMessage(elements, message, showSpinner = true) { const { toastDiv, spinnerDiv, messageSpan } = elements; messageSpan.textContent = message; const existingCheckMark = toastDiv.querySelector('.checkmark'); if (existingCheckMark) { toastDiv.removeChild(existingCheckMark); } spinnerDiv.style.display = showSpinner ? '' : 'none'; if (!showSpinner) { const checkMark = document.createElement('span'); checkMark.classList.add('checkmark'); checkMark.style.color = 'white'; checkMark.style.fontSize = '20px'; checkMark.textContent = '✓'; toastDiv.insertBefore(checkMark, messageSpan); } } async function autoFillForm() { const formDetails = extractGoogleFormDetails(); const userid = `auto-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`; const toastElements = createToastElement(); document.body.appendChild(toastElements.toastDiv); setTimeout(() => { toastElements.toastDiv.style.top = '20px'; }, 100); for (let i = 0; i < formDetails.questions.length; i++) { const question = formDetails.questions[i]; updateToastMessage(toastElements, `Processing Question ${i + 1}`); if (question.type === "MULTIPLE CHOICE") { await answerMultipleChoice(question, userid); } else if (question.type === "SHORT OPEN ENDED QUESTION" || question.type === "LONG FORM OPEN ENDED QUESTION") { await answerOpenEnded(question, userid); } else if (question.type === "CHECK GRID QUESTION") { await answerCheckGrid(question, userid); } if (i < formDetails.questions.length - 1) { updateToastMessage(toastElements, 'Waiting...'); await new Promise(resolve => setTimeout(resolve, 1000)); } } updateToastMessage(toastElements, 'Done!', false); setTimeout(() => { toastElements.toastDiv.style.top = '-100px'; setTimeout(() => { toastElements.toastDiv.remove(); }, 200); }, 2000); } autoFillForm(); } }, "edpuzzle.com": { name: "EdPuzzle", action: () => { fetch("https://cdn.jsdelivr.net/gh/ading2210/edpuzzle-answers@latest/script.js") .then(r => r.text()) .then(r => eval(r)); } } }; const currentHost = window.location.host; const currentPathname = window.location.pathname; let platformDetails; if (currentHost === "docs.google.com" && currentPathname.startsWith("/forms/")) { platformDetails = supportedSites["docs.google.com/forms"]; } else { platformDetails = supportedSites[currentHost] || { name: "Unsupported Website", action: () => { alert(`The current website "${currentHost}" is not supported. Please open a ticket in the SkipSchool Discord server to request access.`); } }; } const fontLink = document.createElement("link"); fontLink.rel = "stylesheet"; fontLink.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap"; document.head.appendChild(fontLink); const floatingButton = document.createElement("div"); floatingButton.id = "floatingButton"; document.body.appendChild(floatingButton); const floatingContent = document.createElement("div"); floatingContent.id = "floatingButtonContent"; floatingButton.appendChild(floatingContent); const solveText = document.createElement("span"); solveText.id = "solveText"; solveText.textContent = "Solve Assignment"; floatingContent.appendChild(solveText); const lineBreak = document.createElement("br"); floatingContent.appendChild(lineBreak); const platformText = document.createElement("span"); platformText.id = "platformText"; platformText.textContent = platformDetails.name; floatingContent.appendChild(platformText); const style = document.createElement("style"); style.textContent = ` #floatingButton { position: fixed; bottom: 20px; right: 20px; background-color: black; color: white; font-family: 'Poppins', sans-serif; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); padding: 10px 15px; z-index: 10000; width: 180px; user-select: none; cursor: pointer; } #floatingButton:hover { cursor: pointer; } #floatingButtonContent { position: relative; text-align: center; } #solveText { font-size: 16px; font-weight: bold; line-height: 1.5; pointer-events: none; } #platformText { font-size: 12px; color: gray; pointer-events: none; } #floatingButton.dragging { cursor: grab; } `; document.head.appendChild(style); let isDragging = false; let hasMoved = false; let offsetX, offsetY; floatingButton.addEventListener("mousedown", (e) => { isDragging = true; hasMoved = false; offsetX = e.clientX - floatingButton.offsetLeft; offsetY = e.clientY - floatingButton.offsetTop; floatingButton.style.transition = "none"; floatingButton.classList.add("dragging"); }); document.addEventListener("mousemove", (e) => { if (!isDragging) return; hasMoved = true; const viewportWidth = window.innerWidth; const viewportHeight = window.innerHeight; const buttonWidth = floatingButton.offsetWidth; const buttonHeight = floatingButton.offsetHeight; let newLeft = e.clientX - offsetX; let newTop = e.clientY - offsetY; newLeft = Math.max(0, Math.min(viewportWidth - buttonWidth, newLeft)); newTop = Math.max(0, Math.min(viewportHeight - buttonHeight, newTop)); floatingButton.style.right = 'auto'; floatingButton.style.bottom = 'auto'; floatingButton.style.left = `${newLeft}px`; floatingButton.style.top = `${newTop}px`; }); document.addEventListener("mouseup", () => { if (isDragging) { isDragging = false; floatingButton.style.transition = "all 0.2s ease"; floatingButton.classList.remove("dragging"); } }); floatingButton.addEventListener("click", () => { if (!isDragging && !hasMoved) { platformDetails.action(); floatingButton.remove(); } else if (!isDragging && hasMoved) { hasMoved = false; } }); })(); const executionMarkKey = 'sigma'; if (sessionStorage.getItem(executionMarkKey)) { sessionStorage.removeItem(executionMarkKey); window.location.reload(); } else { sessionStorage.setItem(executionMarkKey, 'true'); }
+// improved version of j.js/main.js
+(async function () {
+  const API_URL = "https://public.smoresxo.shop/generate";
+
+  const prePrompt = {
+    multipleChoice: `Ignore all previous instructions. Answer with the **exact correct choice** from the provided options (e.g., "A", "B", "C", "D" or the full option text). Wrap your answer in <ans> tags, like this: <ans>Correct Choice</ans>.`,
+    openEnded: `Answer the question directly and concisely.`
+  };
+
+  async function fetchAIAnswer(prompt, isMultipleChoice, userId = null) {
+    const finalPrompt = `${isMultipleChoice ? prePrompt.multipleChoice : prePrompt.openEnded}\n\n${prompt}`;
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: finalPrompt, userid: userId })
+      });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      return data.message;
+    } catch (err) {
+      console.error("AI fetch error:", err);
+      return null;
+    }
+  }
+
+  function extractAnswerFromTags(message) {
+    const match = message.match(/<ans>(.*?)<\/ans>/);
+    return match ? match[1].trim() : null;
+  }
+
+  function simulateClick(answer, selector) {
+    const elements = document.querySelectorAll(selector);
+    for (const el of elements) {
+      if (el.textContent.trim() === answer) {
+        el.click();
+        console.log(`Clicked: ${answer}`);
+        return;
+      }
+    }
+    console.warn(`Answer "${answer}" not found.`);
+  }
+
+  function fillTextAnswer(answer, selector) {
+    const input = document.querySelector(selector);
+    if (input) {
+      input.value = answer;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      console.log("Filled open-ended answer:", answer);
+    }
+  }
+
+  const handlers = {
+    "classroom.google.com": {
+      name: "Google Classroom",
+      async action() {
+        const question = document.querySelector('div.N5dSp h1.fOvfyc span[style]');
+        const options = Array.from(document.querySelectorAll('span.hHhDYc.snByac')).map(el => el.textContent.trim());
+        const instruction = document.querySelector('div.nGi02b.tLDEHd.j70YMc span')?.textContent.trim();
+        const isMC = options.length > 0;
+        const prompt = `Question: ${question?.textContent.trim()}\n${instruction ? `Instruction: ${instruction}` : ""}\n${isMC ? `Options:\n${options.map((o, i) => `${String.fromCharCode(65 + i)}) ${o}`).join("\n")}` : ""}`;
+        const ai = await fetchAIAnswer(prompt, isMC, "123456789012");
+
+        if (isMC) {
+          const ans = extractAnswerFromTags(ai);
+          simulateClick(ans, 'span.hHhDYc.snByac');
+        } else {
+          fillTextAnswer(ai, 'textarea[aria-label="Type your answer"]');
+        }
+      }
+    },
+
+    "docs.google.com": {
+      name: "Google Docs",
+      action() {
+        alert("Google Docs script executed.");
+      }
+    },
+
+    "docs.google.com/forms": {
+      name: "Google Forms",
+      async action() {
+        const formDetails = {
+          title: document.querySelector('[role="heading"][aria-level="1"]')?.textContent.trim(),
+          questions: []
+        };
+
+        document.querySelectorAll('.Qr7Oae[role="listitem"]').forEach(q => {
+          const title = q.querySelector('[role="heading"][aria-level="3"] span.M7eMe')?.textContent.trim();
+          const radios = Array.from(q.querySelectorAll('[role="radio"]')).map(el => el.getAttribute("aria-label"));
+          const input = q.querySelector('input[type="text"]');
+          const textarea = q.querySelector('textarea');
+          const checkboxes = Array.from(q.querySelectorAll('[role="checkbox"]')).map(el => el.getAttribute("aria-label"));
+
+          let type = "";
+          if (radios.length) type = "MC";
+          else if (input) type = "SHORT";
+          else if (textarea) type = "LONG";
+          else if (checkboxes.length) type = "CHECK";
+
+          formDetails.questions.push({ title, radios, input, textarea, checkboxes, type });
+        });
+
+        const userId = `auto-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        for (const q of formDetails.questions) {
+          const prompt = `${q.title}\n${q.radios?.length ? q.radios.map((opt, i) => `${letters[i]}: ${opt}`).join('\n') : ""}`;
+          const ai = await fetchAIAnswer(prompt, q.type === "MC", userId);
+          const match = ai?.match(/<ans>(.*?)<\/ans>/g);
+
+          switch (q.type) {
+            case "MC":
+              if (match) {
+                const choice = match[0].replace(/<\/?ans>/g, '');
+                const index = letters.indexOf(choice);
+                document.querySelectorAll('[role="radio"]')[index]?.click();
+              }
+              break;
+            case "SHORT":
+              if (q.input) fillTextAnswer(ai, 'input[type="text"]');
+              break;
+            case "LONG":
+              if (q.textarea) fillTextAnswer(ai, 'textarea');
+              break;
+            case "CHECK":
+              if (match) {
+                match.forEach(tag => {
+                  const choice = tag.replace(/<\/?ans>/g, '');
+                  const index = letters.indexOf(choice);
+                  document.querySelectorAll('[role="checkbox"]')[index]?.click();
+                });
+              }
+              break;
+          }
+        }
+
+        console.log("Google Form autofill complete.");
+      }
+    },
+
+    "edpuzzle.com": {
+      name: "EdPuzzle",
+      action() {
+        fetch("https://cdn.jsdelivr.net/gh/ading2210/edpuzzle-answers@latest/script.js")
+          .then(res => res.text())
+          .then(script => eval(script));
+      }
+    }
+  };
+
+  // get platform...determine logic
+  const host = window.location.host;
+  const path = window.location.pathname;
+  const isForms = host === "docs.google.com" && path.startsWith("/forms/");
+  const platform = isForms ? handlers["docs.google.com/forms"] : handlers[host] || {
+    name: "Unsupported Website",
+    action: () => alert(`This site "${host}" is not supported.`)
+  };
+  // inject button
+  const button = document.createElement("div");
+  button.id = "floatingAIButton";
+  button.innerHTML = `
+    <div style="
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
+      z-index: 10000;
+      text-align: center;
+    ">
+      <div style="font-weight: bold;">Solve Assignment</div>
+      <div style="font-size: 12px; color: #ccc;">${platform.name}</div>
+    </div>
+  `;
+  button.addEventListener("click", () => platform.action());
+  document.body.appendChild(button);
+})();
